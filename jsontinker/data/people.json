@@ -1,0 +1,28 @@
+{
+    "people": [
+        {
+            "name": "Alice",
+            "age": 30,
+            "addresses": [
+                {
+                    "city": "New York",
+                    "zip": 10001
+                },
+                {
+                    "city": "Boston",
+                    "zip": 20002
+                }
+            ]
+        },
+        {
+            "name": "Bob",
+            "age": 25,
+            "addresses": [
+                {
+                    "city": "Chicago",
+                    "zip": 30003
+                }
+            ]
+        }
+    ]
+}

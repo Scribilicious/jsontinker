@@ -1,0 +1,12 @@
+{
+    "name": "Updated Name",
+    "count": 99,
+    "enabled": true,
+    "nested": {
+        "field1": "updated value",
+        "field2": 123,
+        "nested": [
+            "one", "two", "three"
+        ]
+    }
+}

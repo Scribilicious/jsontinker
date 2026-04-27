@@ -1,0 +1,9 @@
+Options -Indexes
+Options +FollowSymLinks
+
+AddDefaultCharset UTF-8
+
+# Enable rewrite rules
+RewriteEngine on
+
+RedirectMatch 404 /\.git
