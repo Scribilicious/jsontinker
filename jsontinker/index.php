@@ -136,9 +136,10 @@ if ($selectedFile && file_exists($jsonFilePath)) {
                         <p>This JSON file contains no data.</p>
                     </div>
                 <?php else: ?>
+                    <?php $renderedFields = $Helper->renderFormFields($jsonData); ?>
                     <form method="post" action="?file=<?php echo urlencode($selectedFile); ?>">
-                        <h2>Editing: <?php echo $Helper->createTitle($selectedFile); ?></h2>
-                        <?php echo $Helper->renderFormFields($jsonData); ?>
+                        <h2 class="toggle-all-header" onclick="toggleAllGroups()"><?php if (strpos($renderedFields, '<div class="nested-section') !== false): ?><span class="toggle-all-arrow">▼</span> <?php endif; ?>Editing: <?php echo $Helper->createTitle($selectedFile); ?></h2>
+                        <?php echo $renderedFields; ?>
                     <div class="actions">
                         <button type="reset" class="btn btn-reset">Reset Changes</button>
                         <button type="submit" class="btn">Save Changes</button>

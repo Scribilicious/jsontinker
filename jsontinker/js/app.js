@@ -88,6 +88,37 @@ function toggleCollapse(event) {
 }
 
 /**
+ * Close all collapsible groups
+ */
+function closeAllGroups() {
+    document.querySelectorAll('.nested-section').forEach(section => {
+        section.classList.add('collapsed');
+    });
+    const arrow = document.querySelector('.toggle-all-arrow');
+    if (arrow) arrow.classList.add('collapsed');
+}
+
+/**
+ * Toggle all collapsible groups
+ */
+function toggleAllGroups() {
+    const sections = document.querySelectorAll('.nested-section');
+    if (sections.length === 0) return;
+
+    const firstSection = sections[0];
+    const isCollapsed = firstSection.classList.contains('collapsed');
+    
+    sections.forEach(section => {
+        section.classList.toggle('collapsed', !isCollapsed);
+    });
+
+    const arrow = document.querySelector('.toggle-all-arrow');
+    if (arrow) {
+        arrow.classList.toggle('collapsed', !isCollapsed);
+    }
+}
+
+/**
  * Add a new item to an array
  */
 function addArrayItem(button) {

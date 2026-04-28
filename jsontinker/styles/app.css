@@ -33,6 +33,25 @@ header {
     z-index: 1000;
 }
 
+.toggle-all-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.toggle-all-arrow {
+    display: inline-block;
+    font-size: 20px;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+}
+
+.toggle-all-arrow.collapsed {
+    transform: rotate(-90deg);
+}
+
 .menu-toggle {
     display: none;
     position: absolute;
