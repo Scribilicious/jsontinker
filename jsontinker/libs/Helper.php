@@ -174,4 +174,19 @@ class Helper {
         $string = ucwords($string);
         return $string;
     }
+
+    public function createMenu($title, $files, $selectedFile = null) {
+        if (empty($files)) {
+            return null;
+        }
+        $html = '<h2>' . $title . '</h2>';
+        $html .= '<ul class="file-list">';
+        foreach ($files as $file) {
+            $html .= '<li>';
+            $html .= '<a href="?file=' . urlencode($file) . '" class="' . ($selectedFile === $file ? 'active' : '') . '">' . $this->createTitle($file) . '</a>';
+            $html .= '</li>';
+        }
+        $html .= '<ul>';
+        return $html;
+    }
 }

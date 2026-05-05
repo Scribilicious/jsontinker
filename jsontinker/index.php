@@ -54,8 +54,10 @@ if ($showLogin):
 else:
 
 // Configuration
-$dataDir = 'data';
+$dataDir = $config['data'] ?? 'data';
 $jsonFiles = [];
+$readmeFiles = [];
+$html = null;
 $Helper = new Helper();
 
 // Scan data directory for JSON files
@@ -64,38 +66,40 @@ if (is_dir($dataDir)) {
     foreach ($files as $file) {
         if (pathinfo($file, PATHINFO_EXTENSION) === 'json') {
             $jsonFiles[] = $file;
+        } elseif (in_array(pathinfo($file, PATHINFO_EXTENSION), ['md', 'html', 'htm'])) {
+            $readmeFiles[] = $file;
         }
     }
 }
 
 // Get selected file
-$selectedFile = $_GET['file'] ?? ($jsonFiles[0] ?? '');
-$jsonFilePath = $dataDir . '/' . $selectedFile;
+$selectedFile = $_GET['file'] ?? ($readmeFiles[0] ?? $jsonFiles[0] ?? '');
+$filename = $dataDir . '/' . $selectedFile;
 $jsonData = null;
 $message = '';
 
-// Initialize JsonFile object
-if ($selectedFile && file_exists($jsonFilePath)) {
-    $jsonFile = new JsonFile($jsonFilePath);
-    $jsonData = $jsonFile->read();
-
-    // Handle form submission
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['data'])) {
-        $newData = $_POST['data'];
-
-        // Process form data
-        $processedData = $Helper->processFormData($newData);
-
-        try {
-            $jsonFile->validate($processedData);
-            $jsonFile->write($processedData);
-            $jsonData = $processedData;
-            $message = 'File saved successfully!';
-        } catch (Exception $e) {
-            $message = 'Error saving file: ' . $e->getMessage();
+if ($selectedFile && file_exists($filename)) {
+    if (pathinfo($filename, PATHINFO_EXTENSION) === 'json') {
+        $jsonFile = new JsonFile($filename);
+        $jsonData = $jsonFile->read();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['data'])) {
+            $newData = $_POST['data'];
+            $processedData = $Helper->processFormData($newData);
+            try {
+                $jsonFile->validate($processedData);
+                $jsonFile->write($processedData);
+                $jsonData = $processedData;
+                $message = 'File saved successfully!';
+            } catch (Exception $e) {
+                $message = 'Error saving file: ' . $e->getMessage();
+            }
         }
+    } else {
+        $html = file_get_contents($filename);
     }
 }
+
+
 ?>
 <div class="container">
     <header>
@@ -106,17 +110,8 @@ if ($selectedFile && file_exists($jsonFilePath)) {
     <div class="main-content">
         <div class="sidebar-overlay"></div>
         <div class="sidebar">
-            <h2>Files</h2>
-            <ul class="file-list">
-                <?php foreach ($jsonFiles as $file): ?>
-                    <li>
-                        <a href="?file=<?php echo urlencode($file); ?>"
-                           class="<?php echo $selectedFile === $file ? 'active' : ''; ?>">
-                            <?php echo $Helper->createTitle($file); ?>
-                        </a>
-                    </li>
-                <?php endforeach; ?>
-            </ul>
+        <?= $Helper->createMenu($config['label']['sidebar_title_html'] ?? 'Info', $readmeFiles, $selectedFile); ?>
+        <?= $Helper->createMenu($config['label']['sidebar_title_json'] ?? 'Data', $jsonFiles, $selectedFile); ?>
         </div>
         <div class="editor-area">
             <?php if ($message): ?>
@@ -124,34 +119,37 @@ if ($selectedFile && file_exists($jsonFilePath)) {
                     <?php echo htmlspecialchars($message); ?>
                 </div>
             <?php endif; ?>
-
-            <?php if ($selectedFile && $jsonData !== null): ?>
-                <?php if (empty($jsonData) && is_array($jsonData)): ?>
+            <?php if ($selectedFile): ?>
+                <?php if ($html !== null): ?>
+                <?= $html; ?>
+                <?php elseif ($jsonData !== null): ?>
+                    <?php if (empty($jsonData) && is_array($jsonData)): ?>
+                        <div class="no-file">
+                            <h2><?php echo $Helper->createTitle($selectedFile); ?> is empty</h2>
+                            <p>This JSON file contains no data.</p>
+                        </div>
+                    <?php else: ?>
+                        <?php $renderedFields = $Helper->renderFormFields($jsonData); ?>
+                        <form method="post" action="?file=<?php echo urlencode($selectedFile); ?>">
+                            <h2 class="toggle-all-header" onclick="toggleAllGroups()"><?php if (strpos($renderedFields, '<div class="nested-section') !== false): ?><span class="toggle-all-arrow">▼</span> <?php endif; ?>Editing: <?php echo $Helper->createTitle($selectedFile); ?></h2>
+                            <?php echo $renderedFields; ?>
+                        <div class="actions">
+                            <button type="reset" class="btn btn-reset">Reset Changes</button>
+                            <button type="submit" class="btn">Save Changes</button>
+                        </div>
+                    </form>
+                    <?php endif; ?>
+                <?php elseif ($selectedFile): ?>
                     <div class="no-file">
-                        <h2><?php echo $Helper->createTitle($selectedFile); ?> is empty</h2>
-                        <p>This JSON file contains no data.</p>
+                        <h2>File not found</h2>
+                        <p>The file "<?php echo htmlspecialchars($selectedFile); ?>" could not be loaded.</p>
                     </div>
                 <?php else: ?>
-                    <?php $renderedFields = $Helper->renderFormFields($jsonData); ?>
-                    <form method="post" action="?file=<?php echo urlencode($selectedFile); ?>">
-                        <h2 class="toggle-all-header" onclick="toggleAllGroups()"><?php if (strpos($renderedFields, '<div class="nested-section') !== false): ?><span class="toggle-all-arrow">▼</span> <?php endif; ?>Editing: <?php echo $Helper->createTitle($selectedFile); ?></h2>
-                        <?php echo $renderedFields; ?>
-                    <div class="actions">
-                        <button type="reset" class="btn btn-reset">Reset Changes</button>
-                        <button type="submit" class="btn">Save Changes</button>
+                    <div class="no-file">
+                        <h2>No JSON files found</h2>
+                        <p>Place JSON files in the "data" directory to start editing.</p>
                     </div>
-                </form>
                 <?php endif; ?>
-            <?php elseif ($selectedFile): ?>
-                <div class="no-file">
-                    <h2>File not found or invalid JSON</h2>
-                    <p>The file "<?php echo htmlspecialchars($selectedFile); ?>" could not be loaded.</p>
-                </div>
-            <?php else: ?>
-                <div class="no-file">
-                    <h2>No JSON files found</h2>
-                    <p>Place JSON files in the "data" directory to start editing.</p>
-                </div>
             <?php endif; ?>
         </div>
     </div>
