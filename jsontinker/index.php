@@ -1,9 +1,5 @@
 <?php
-session_start();
-
-require_once 'libs/config.php';
-require_once 'libs/JsonFile.php';
-require_once 'libs/Helper.php';
+require_once 'libs/init.php';
 
 $showLogin = false;
 $loginError = '';

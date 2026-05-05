@@ -1,4 +1,7 @@
 <?php
+session_start();
+
+require_once  'vendor/autoload.php';
 
 $config = [
     'favicon' => '🚀',
@@ -8,3 +11,6 @@ $config = [
     'visible' => false,
     'keys' => []
 ];
+
+require_once 'JsonFile.php';
+require_once 'Helper.php';

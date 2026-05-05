@@ -1,0 +1,12 @@
+{
+  "name": "jsontinker/libs",
+  "type": "library",
+  "require": {
+    "erusev/parsedown": "^1.7"
+  },
+  "autoload": {
+    "psr-4": {
+      "Libs\\": "src/"
+    }
+  }
+}

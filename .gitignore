@@ -1,2 +1,4 @@
 jsontinker.sublime-workspace
 **/.DS_Store
+jsontinker/libs/vendor/
+jsontinker/libs/composer.lock

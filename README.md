@@ -10,12 +10,20 @@ Built as a plain single-page app with no framework, no Composer, no build step.
 
 ## Quick Start
 
+Run composer:
+
+```bash
+cd jsontinker/libs && composer update
+```
+
 When hosting JsonTinker don't forget to give the data folder access rights:
+
 ```bash
 cd jsontinker && chmod 707 data
 ```
 
 Run JsonTinker:
+
 ```bash
 cd jsontinker && php -S localhost:8000
 ```
@@ -66,14 +74,14 @@ $config = [
 ];
 ```
 
-| Key | Purpose |
-|-----|---------|
-| `favicon` | Emoji used as page favicon |
-| `title` | Browser tab title |
-| `description` | Meta description |
-| `version` | Displayed in footer |
-| `visible` | `false` = `noindex, nofollow`; `true` = `index, follow` |
-| `keys` | Optional. Array of SHA-256 hashes for access control |
+| Key           | Purpose                                                 |
+| ------------- | ------------------------------------------------------- |
+| `favicon`     | Emoji used as page favicon                              |
+| `title`       | Browser tab title                                       |
+| `description` | Meta description                                        |
+| `version`     | Displayed in footer                                     |
+| `visible`     | `false` = `noindex, nofollow`; `true` = `index, follow` |
+| `keys`        | Optional. Array of SHA-256 hashes for access control    |
 
 ## Auth
 
