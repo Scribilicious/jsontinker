@@ -1,12 +1,8 @@
 # JsonTinker
 
-A PHP-based browser UI for editing JSON files. Drop it behind any PHP web server,
-point it at a `data/` directory full of `.json` files, and edit them through
-type-aware dynamic forms — strings become textareas, numbers become number
-inputs, booleans become checkboxes, nested objects and arrays become collapsible
-sections with add/remove/reindex.
+A PHP-based browser UI for editing JSON files. Drop it behind any PHP web server, point it at a `data/` directory full of `.json` files, and edit them through type-aware dynamic forms — strings become textareas, numbers become number inputs, booleans become checkboxes, nested objects and arrays become collapsible sections with add/remove/reindex.
 
-Built as a plain single-page app with no framework, no Composer, no build step.
+I created this simple tool for some game file editing for non tech people that are not familiar with raw json files.
 
 ## Quick Start
 
@@ -20,6 +16,12 @@ When hosting JsonTinker don't forget to give the data folder access rights:
 
 ```bash
 cd jsontinker && chmod 707 data
+```
+
+Or as an one liner:
+
+```
+cd jsontinker && (cd libs && composer update) && chmod 707 data
 ```
 
 Run JsonTinker:
@@ -37,6 +39,7 @@ directory appear in the sidebar.
 jsontinker/
 ├── index.php            # Entry point — routing, auth, form handling, HTML
 ├── libs/
+│   ├── composer.json    # The composer JSON for external libraries
 │   ├── config.php       # $config array (title, favicon, version, auth keys)
 │   ├── JsonFile.php     # Read/write/validate JSON files
 │   └── Helper.php       # Dot-notation form processing + recursive rendering
@@ -45,8 +48,6 @@ jsontinker/
 ├── js/
 │   └── app.js           # Auto-expand textareas, sidebar toggle, array add/remove/reindex
 └── data/                # JSON files to edit
-    ├── galaxies.json
-    ├── planets_info.json
     ├── ...
 ```
 

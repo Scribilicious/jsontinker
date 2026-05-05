@@ -12,6 +12,7 @@ Plain PHP single-page app (no framework, no Composer). Layout: sidebar lists all
 jsontinker/
 ├── index.php          # Entry point — routing, auth, form handling, HTML output
 ├── libs/
+|   ├── composer.json
 │   ├── config.php     # $config array (title, version, auth keys)
 │   ├── JsonFile.php   # Class: read/write/validate JSON files
 │   └── Helper.php     # Class: dot-notation form processing + recursive field rendering
@@ -20,13 +21,8 @@ jsontinker/
 ├── js/
 │   └── app.js         # Client-side: auto-expand textareas, sidebar toggle, collapsible sections, array add/remove/reindex
 └── data/              # Game data JSON files — the files this editor manages
-    ├── galaxies.json
-    ├── planets_info.json
-    ├── planets_news.json
-    ├── ships.json
-    ├── strings.json
-    ├── test.json
-    └── test2.json
+    ├── people.json
+    └── test.json
 ```
 
 **No build step, no package manager, no tests.** Serve from any PHP-capable web server.
@@ -56,13 +52,13 @@ The input name attribute format in PHP: `data[player.0.name]` → `$_POST['data'
 
 Recursively walks JSON data and renders the appropriate input type:
 
-| JSON type      | HTML input        | Notes                                   |
-|----------------|-------------------|-----------------------------------------|
-| string/null    | `<textarea>`      | monospace font, auto-expanding (JS)     |
-| int/float      | `<input type="number" step="any">` |                                    |
+| JSON type      | HTML input                                                    | Notes                                |
+| -------------- | ------------------------------------------------------------- | ------------------------------------ |
+| string/null    | `<textarea>`                                                  | monospace font, auto-expanding (JS)  |
+| int/float      | `<input type="number" step="any">`                            |                                      |
 | bool           | hidden input `false` + `<input type="checkbox" value="true">` | Checked/unchecked maps to true/false |
-| object (assoc) | nested section with collapsible header |                                   |
-| array (list)   | array container with add/remove buttons, reindex on change |                              |
+| object (assoc) | nested section with collapsible header                        |                                      |
+| array (list)   | array container with add/remove buttons, reindex on change    |                                      |
 
 ## Non-Obvious Patterns & Gotchas
 
@@ -73,15 +69,6 @@ Recursively walks JSON data and renders the appropriate input type:
 - **`addArrayItem()` cloning vs creation**: If the array has existing items in the DOM, it clones the first item's structure. Otherwise it creates a default textarea item. This means dynamic arrays always follow the shape of the first element.
 - **Section collapse via CSS class**: Clicking a `.section-header` toggles `.collapsed` on its `.nested-section` parent. CSS hides `.nested-content` within `.collapsed` sections. Clicking buttons inside the header doesn't trigger collapse (`event.target.closest('button')` guard).
 - **Subtitle has `padding-right: 90px`** on mobile (480px breakpoint) to keep text visible behind the absolute-positioned `.menu-toggle` button.
-
-## Game Data Context
-
-The JSON files are templates/content for a browser-based space trading game. Notable structure:
-
-- **planets_info.json**: Planet type keys (`ocean`, `rocky`, `gas`, `earthlike`, `artificial`), each with `first` and `last` arrays of description strings — used to generate randomized planet descriptions
-- **planets_news.json**: Template arrays (`headlines`, `subjects`, `actions`) with `{NAME}` and `{TYPE}` placeholders for procedural news generation
-- **ships.json**: `player` array of ship objects, and likely `enemy`/other categories — each ship has numeric stats (attack, defence, hull, cargo, speed, range, price, size, zoom, upgrades) + `planets` allowed list + `info` text
-- **strings.json**: UI string constants and game messages (ticker, planet health descriptions, trade verbs, planet type names)
 
 ## Running
 
