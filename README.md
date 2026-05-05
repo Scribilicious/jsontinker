@@ -2,28 +2,28 @@
 
 A PHP-based browser UI for editing JSON files. Drop it behind any PHP web server, point it at a `data/` directory full of `.json` files, and edit them through type-aware dynamic forms — strings become textareas, numbers become number inputs, booleans become checkboxes, nested objects and arrays become collapsible sections with add/remove/reindex.
 
-I created this simple tool for some game file editing for non tech people that are not familiar with raw json files.
+I created this simple tool for some game file editing for non-tech people that are not familiar with raw JSON files.
 
 ![Screenshot](jsontinker.png)
 
 ## Quick Start
 
-Optional run composer if you want to use markdown files:
+Optional: install Composer dependencies for markdown support:
 
 ```bash
-cd jsontinker/libs && composer update
+cd jsontinker/libs && composer install
 ```
 
-When hosting JsonTinker don't forget to give the data folder access rights:
+When hosting JsonTinker, ensure the data folder has proper write permissions:
 
 ```bash
-cd jsontinker && chmod 707 data
+cd jsontinker && chmod 777 data
 ```
 
-Or as an one liner:
+Or as a one-liner:
 
-```
-cd jsontinker && (cd libs && composer update) && chmod 707 data
+```bash
+cd jsontinker && (cd libs && composer install) && chmod 777 data
 ```
 
 Run JsonTinker:
@@ -32,48 +32,53 @@ Run JsonTinker:
 cd jsontinker && php -S localhost:8000
 ```
 
-Open `http://localhost:8000` in a browser. All `.json` files in the `data/`
-directory appear in the sidebar.
+Open `http://localhost:8000` in a browser. All `.json`, `.html`, and `.md` files in the `data/` directory appear in the sidebar.
 
 ## Project Structure
 
 ```
 jsontinker/
-├── index.php            # Entry point — routing, auth, form handling, HTML
+├── index.php              # Entry point — routing, auth, form handling, HTML
 ├── libs/
-│   ├── composer.json    # The composer JSON for external libraries
-│   ├── config.php       # $config array (title, favicon, version, auth keys)
-│   ├── JsonFile.php     # Read/write/validate JSON files
-│   └── Helper.php       # Dot-notation form processing + recursive rendering
+│   ├── composer.json      # Composer dependencies (Parsedown for markdown)
+│   ├── init.php           # $config array (title, favicon, version, auth keys)
+│   ├── JsonFile.php       # Read/write/validate JSON files
+│   └── Helper.php         # Dot-notation form processing + recursive rendering
 ├── styles/
-│   └── app.css          # All styling
+│   └── app.css            # All styling
 ├── js/
-│   └── app.js           # Auto-expand textareas, sidebar toggle, array add/remove/reindex
-└── data/                # JSON files to edit
-    ├── ...
+│   └── app.js             # Auto-expand textareas, sidebar toggle, collapsible sections, array add/remove/reindex
+└── data/                  # JSON, HTML, and Markdown files to edit
+    ├── people.json
+    ├── test.json
+    ├── html.html
+    └── markdown.md
 ```
 
 ## How It Works
 
-1. A JSON file is selected from the sidebar, read via `JsonFile::read()`
-2. `Helper::renderFormFields()` recursively walks the data and renders HTML
-   inputs with dot-notation names (e.g. `data[player.0.name]`)
-3. On submit, `Helper::processFormData()` splits the dot-notation keys back
-   into a nested PHP array
+1. A file is selected from the sidebar, read via `JsonFile::read()`
+2. `Helper::renderFormFields()` recursively walks the data and renders HTML inputs with dot-notation names (e.g., `data[player.0.name]`)
+3. On submit, `Helper::processFormData()` splits the dot-notation keys back into a nested PHP array
 4. `JsonFile::validate()` and `JsonFile::write()` save with `JSON_PRETTY_PRINT`
 
 ## Configuration
 
-Edit `libs/config.php`:
+Edit `jsontinker/libs/init.php`:
 
 ```php
 $config = [
     'favicon' => '🚀',
     'title'   => 'JsonTinker',
-    'description' => 'JSON file editor.',
-    'version' => '1.0.0',
+    'description' => 'A simple editor for the json files.',
+    'version' => '1.0.0b',
     'visible' => false,
-    'keys'    => [],
+    'label' => [
+        'sidebar_title_html' => 'Info',
+        'sidebar_title_json' => 'Data',
+    ],
+    'data' => null,
+    'keys' => []
 ];
 ```
 
@@ -85,14 +90,13 @@ $config = [
 | `version`     | Displayed in footer                                     |
 | `visible`     | `false` = `noindex, nofollow`; `true` = `index, follow` |
 | `keys`        | Optional. Array of SHA-256 hashes for access control    |
+| `label`       | Custom labels for sidebar sections                      |
 
 ## Auth
 
-`keys` is **optional** — leave it as an empty array `[]` and the editor is
-accessible to everyone with no login screen.
+`keys` is **optional** — leave it as an empty array `[]` and the editor is accessible to everyone with no login screen.
 
-If `keys` contains one or more SHA-256 hashes, a login screen is shown. You can
-authenticate in two ways:
+If `keys` contains one or more SHA-256 hashes, a login screen is shown. You can authenticate in two ways:
 
 ### 1. Key query parameter
 
@@ -104,8 +108,7 @@ The key is hashed with SHA-256 and compared against the stored hashes.
 
 ### 2. Username + password form
 
-The hash is computed as `sha256(username . password)` — the username and
-password are concatenated directly with **no separator**.
+The hash is computed as `sha256(username . password)` — the username and password are concatenated directly with **no separator**.
 
 ### Generating a key hash
 
@@ -119,14 +122,17 @@ For the username/password form:
 echo -n "myusermypass" | shasum -a 256
 ```
 
-Paste the output (the long hex string) into the `keys` array in `config.php`.
+Paste the output (the long hex string) into the `keys` array in `init.php`.
+
+## File Types
+
+JsonTinker can edit:
+- `.json` files — as structured dynamic forms
+- `.html` files — as raw text in a textarea
+- `.md` files — as raw markdown text (rendered preview when Composer dependencies are installed)
 
 ## Caveats
 
-- **Type coercion**: On save, numeric strings with `.` become floats, without
-  `.` become ints, `"true"`/`"false"`/`"null"` (case-insensitive) become
-  booleans/null. You cannot store those literal strings through the editor.
-- **Array remove reindexes**: Removing an array item reindexes all remaining
-  items to avoid gaps. Remove item 2 of 5, indices 0-3 are submitted.
-- **`$config` is global**: `config.php` defines `$config` in the global scope
-  and is `require`'d (not returned), so it's used directly as a global.
+- **Type coercion**: On save, numeric strings with `.` become floats, without `.` become ints, `"true"`/`"false"`/`"null"` (case-insensitive) become booleans/null. You cannot store those literal strings through the editor.
+- **Array remove reindexes**: Removing an array item reindexes all remaining items to avoid gaps. Remove item 2 of 5, indices 0-3 are submitted.
+- **`$config` is global**: `init.php` defines `$config` in the global scope and is `require`'d (not returned), so it's used directly as a global.

@@ -1,37 +1,39 @@
 # JSON Editor
 
-Project Name: JsonTinker
+**Project Name:** JsonTinker
 
-A PHP-based dynamic JSON editor. Provides a browser UI to edit any JSON file by rendering it as dynamic forms with type-aware inputs (strings → textareas, numbers → number inputs, booleans → checkboxes, nested objects/arrays → collapsible sections with add/remove).
+A PHP-based dynamic JSON editor. Provides a browser UI to edit JSON, HTML, and Markdown files by rendering them as dynamic forms with type-aware inputs (strings → textareas, numbers → number inputs, booleans → checkboxes, nested objects/arrays → collapsible sections with add/remove).
 
 ## Architecture
 
-Plain PHP single-page app (no framework, no Composer). Layout: sidebar lists all `.json` files in `data/`, editor area renders dynamic form fields for the selected file's contents.
+Plain PHP single-page app (no framework). Composer is used optionally for markdown support via Parsedown library. Layout: sidebar lists all `.json`, `.html`, and `.md` files in `data/`, editor area renders dynamic form fields for the selected file's contents.
 
 ```
 jsontinker/
-├── index.php          # Entry point — routing, auth, form handling, HTML output
+├── index.php              # Entry point — routing, auth, form handling, HTML output
 ├── libs/
-|   ├── composer.json
-│   ├── config.php     # $config array (title, version, auth keys)
-│   ├── JsonFile.php   # Class: read/write/validate JSON files
-│   └── Helper.php     # Class: dot-notation form processing + recursive field rendering
+│   ├── composer.json      # Composer dependencies (erusev/parsedown for markdown)
+│   ├── init.php           # $config array (title, favicon, version, auth keys, labels)
+│   ├── JsonFile.php       # Class: read/write/validate JSON files
+│   └── Helper.php         # Class: dot-notation form processing + recursive field rendering
 ├── styles/
-│   └── app.css        # All styling (no CSS framework)
+│   └── app.css            # All styling (no CSS framework)
 ├── js/
-│   └── app.js         # Client-side: auto-expand textareas, sidebar toggle, collapsible sections, array add/remove/reindex
-└── data/              # Game data JSON files — the files this editor manages
+│   └── app.js             # Client-side: auto-expand textareas, sidebar toggle, collapsible sections, array add/remove/reindex
+└── data/                  # JSON, HTML, and Markdown files — the files this editor manages
     ├── people.json
-    └── test.json
+    ├── test.json
+    ├── html.html
+    └── markdown.md
 ```
 
-**No build step, no package manager, no tests.** Serve from any PHP-capable web server.
+**No build step, no package manager required (Composer optional).** Serve from any PHP-capable web server.
 
 ## How It Works
 
 ### Form Submission Flow (index.php)
 
-1. Read selected JSON file via `JsonFile::read()`
+1. Read selected file via `JsonFile::read()`
 2. On POST with `data` array: `Helper::processFormData($newData)` converts flat PHP `$_POST` keys into nested structure using dot-notation key splitting
 3. `JsonFile::validate()` checks data is array + valid JSON
 4. `JsonFile::write()` saves back with `JSON_PRETTY_PRINT`
@@ -60,10 +62,39 @@ Recursively walks JSON data and renders the appropriate input type:
 | object (assoc) | nested section with collapsible header                        |                                      |
 | array (list)   | array container with add/remove buttons, reindex on change    |                                      |
 
+### File Type Handling
+
+| File Extension | Handling                                      |
+| -------------- | -------------------------------------------- |
+| .json          | Parsed as JSON, rendered as dynamic forms   |
+| .html          | Raw text in textarea                         |
+| .md            | Raw markdown in textarea, preview if Composer deps installed |
+
+## Configuration
+
+Configuration is defined in `jsontinker/libs/init.php`. The `$config` array is defined in the global scope and used directly throughout the application.
+
+```php
+$config = [
+    'favicon' => '🚀',
+    'title'   => 'JsonTinker',
+    'description' => 'A simple editor for the json files.',
+    'version' => '1.0.0b',
+    'visible' => false,
+    'label' => [
+        'sidebar_title_html' => 'Info',
+        'sidebar_title_json' => 'Data',
+    ],
+    'data' => null,
+    'keys' => []
+];
+```
+
 ## Non-Obvious Patterns & Gotchas
 
 - **No `$config` import**: `init.php` defines `$config` in the global scope. It is `require`'d, not returned. `$config` is used directly as a global.
-- **Auth is security-through-obscurity**: `$config['keys']` contains SHA-256 hashes of `username+password` (no delimiter). Empty `keys` = no auth. `visible: false` sets `noindex, nofollow`.
+- **Auth is security-through-obscurity**: `$config['keys']` contains SHA-256 hashes. Can be provided via query param `?k=key` or username+password form where hash = `sha256(username . password)` with no delimiter. Empty `keys` = no auth. `visible: false` sets `noindex, nofollow`.
+- **Composer is optional**: The app checks for `vendor/autoload.php` and only loads Composer dependencies if present. Markdown preview requires Parsedown library.
 - **ProcessFormData type coercion**: String values are auto-converted: numerics with `.` → float, without `.` → int, `"true"`/`"false"`/`"null"` (case-insensitive) → bool/null. This means you can't store those strings as-is through the editor.
 - **Array reindexing after remove**: The JS `removeArrayItem` function removes the DOM element, then calls `reindexArray` to reassign indices and update all input names/IDs. **Crucially**, this also reassigns the last item's index to the removed position — so if you remove item 2 of 5, the form submits indices 0-3, not 0,1,3,4. This is intentional to avoid gaps.
 - **`addArrayItem()` cloning vs creation**: If the array has existing items in the DOM, it clones the first item's structure. Otherwise it creates a default textarea item. This means dynamic arrays always follow the shape of the first element.
@@ -76,4 +107,11 @@ Serve the `jsontinker/` directory with any PHP-capable web server:
 
 ```bash
 cd jsontinker && php -S localhost:8000
+```
+
+For full functionality (markdown support):
+
+```bash
+cd jsontinker/libs && composer install
+cd ../.. && php -S localhost:8000
 ```
