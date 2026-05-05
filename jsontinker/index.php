@@ -59,6 +59,7 @@ $jsonFiles = [];
 $readmeFiles = [];
 $html = null;
 $Helper = new Helper();
+$Parsedown = null;
 
 // Scan data directory for JSON files
 if (is_dir($dataDir)) {
@@ -79,7 +80,9 @@ $jsonData = null;
 $message = '';
 
 if ($selectedFile && file_exists($filename)) {
-    if (pathinfo($filename, PATHINFO_EXTENSION) === 'json') {
+    $extension = pathinfo($filename, PATHINFO_EXTENSION);
+
+    if ($extension === 'json') {
         $jsonFile = new JsonFile($filename);
         $jsonData = $jsonFile->read();
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['data'])) {
@@ -96,6 +99,13 @@ if ($selectedFile && file_exists($filename)) {
         }
     } else {
         $html = file_get_contents($filename);
+
+        if ($extension === 'md' && $composer) {
+            if (empty($Parsedown)) {
+                $Parsedown = new Parsedown();
+            }
+            $html = $Parsedown->text($html);
+        }
     }
 }
 

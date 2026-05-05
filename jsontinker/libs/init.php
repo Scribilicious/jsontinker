@@ -1,7 +1,12 @@
 <?php
 session_start();
 
-require_once  'vendor/autoload.php';
+$composer = false;
+// Optional use of Composer
+if (file_exists(__DIR__ . '/vendor/autoload.php')) {
+    $composer = true;
+    require_once 'vendor/autoload.php';
+}
 
 $config = [
     'favicon' => '🚀',

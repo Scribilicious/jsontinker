@@ -4,9 +4,11 @@ A PHP-based browser UI for editing JSON files. Drop it behind any PHP web server
 
 I created this simple tool for some game file editing for non tech people that are not familiar with raw json files.
 
+![Screenshot](jsontinker.png)
+
 ## Quick Start
 
-Run composer:
+Optional run composer if you want to use markdown files:
 
 ```bash
 cd jsontinker/libs && composer update
